@@ -1,5 +1,5 @@
 # MasterChef
-All Contracts used injected web-3 through remix. In order to write to the contracts, you will need to use contract through remix.
+All Contracts used injected web-3 through remix. In order to write to the contracts, you will need to use the contract through remix.
 
 Step 1: Go to contract adress below and copy the source code.
 Step 2: Paste source code into file on remix and compile it (make sure you are using correct version of compiler!)
