@@ -8,4 +8,4 @@ the At Address paste the contract address you copied the source code from.
 Now you should see the contract you wanted to interact with under deployed contracts. You can then use the functions on remix to then interact with the contract on the Rinkeby Testnet.  
 
 
-Apple Token Rinkeby Testnet Contract Address [0x3cC148f103Af20f43ebfcFc15bc5bbF172c6B1d0](https://rinkeby.etherscan.io/address/0x3cc148f103af20f43ebfcfc15bc5bbf172c6b1d0)
+Apple Token Rinkeby Testnet Contract Address [0x3cC148f103Af20f43ebfcFc15bc5bbF172c6B1d0](https://rinkeby.etherscan.io/address/0x3cc148f103af20f43ebfcfc15bc5bbf172c6b1d0) (Use Compiler Version ^0.6.12)
