@@ -21,4 +21,4 @@ To test deposit/withdrawl/rewards: (Can see transaction history under this walle
 2. Withdrew 100,000 Apple. (Emmisions were set to 0 so no rewards gained).  
 Then emmisions where set to 1 Apple per block and allocation changed from 0 to 1 so that emmisions would be gained.  
 1. Deposited 100,000 Apple.  
-2. Withdrew 100,001 Apple. (1 block after alocation for pool changed to 1).  
+2. Withdrew 100,000 Apple from the pool and recieved 100,036.3 Apple (36.3 Apple as rewards).
