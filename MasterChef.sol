@@ -10,12 +10,12 @@ import './AppleToken.sol';
 import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/solc-0.6/contracts/access/Ownable.sol';
 
 /*
-This MasterChef was forked from PancakeSwap and is written to use in test projects.
-USE AT YOUR OWN RISK!!!!!
+ This MasterChef was forked from PancakeSwap and is written to use in test projects.
+ USE AT YOUR OWN RISK!!!!!
 
-MasterChef is the master of Apples. He can make Apples and he is a fair guy.
-This contract is ownable and this version has no governece and hence no plan to relinquish that ownership power.
-The owner holds tremendous power.
+ MasterChef is the master of Apples. He can make Apples and he is a fair guy.
+ This contract is ownable and this version has no governece and hence no plan to relinquish that ownership power.
+ The owner holds tremendous power.
 */
 
 contract AppleMasterChef is Ownable {
@@ -23,13 +23,15 @@ contract AppleMasterChef is Ownable {
  using SafeERC20 for IERC20;
 
 /*
-Info for each user. 
+ Info for each user. 
 
-The exludedReward is calculated as follows whenever a user deposits or withdraws LP tokens.
-1. Pool's accApplePerShare and lastRewardBlock are updated.
-2. User recieves pending award sent to their address. Always recieves total amount pending because rewardRate for new total may differ.
-3. User's amount is updated. (Increases if depositing and decreases if withdrawing.)
-4. User's excludedReward is updated. (Namely it excludes all rewards obtained until block after the deposit or withdrawl.)
+ The exludedReward is calculated as follows whenever a user deposits or withdraws LP tokens.
+ 1. Pool's accApplePerShare and lastRewardBlock are updated.
+ 2. User recieves pending reward sent to their address. This is the total amount of pending apple!
+ This is because pendingApple is calculated by multiplying user amount of shares with accApplePerShare, which if user lp is deposited or withdrawn, then the
+ amount of shares will change causing the pendingApples function to under or overcalculate.
+ 3. User's amount is updated. (Increases if depositing and decreases if withdrawing.)
+ 4. User's excludedReward is updated. (Namely it excludes all rewards obtained until block after the deposit or withdrawl.)
 */
 
  struct UserInfo {
@@ -38,9 +40,10 @@ The exludedReward is calculated as follows whenever a user deposits or withdraws
  }
 
  
- /*
+/*
  Info for each pool
- */
+*/
+ 
  struct PoolInfo {
  IERC20 lpToken; // Address of LP token contract.
  uint256 allocPoint; // How many allocation points assigned to this pool. Used to determine percent Apples to send per block
@@ -87,6 +90,7 @@ AppleToken public apple; // The Apple TOKEN!
 /*
  Gives the total number of pools in staking contract.
 */
+
  function poolLength() external view returns (uint256) {
  return poolInfo.length;
  }
@@ -101,6 +105,7 @@ AppleToken public apple; // The Apple TOKEN!
  _depositFeeBP is the deposit fee you want to charge each time in basis points.
  _withUpdate is a bool. Choose 1 if you want to massUpdate all pools and 0 if you dont want to update pools.
 */
+
  function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
  require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
  if (_withUpdate) {
@@ -119,11 +124,11 @@ AppleToken public apple; // The Apple TOKEN!
 
 
 /*
-Updates the given pool's apple allocation point and deposit fee. Can only be called by the owner.
-Inputs: _pid is pool you want to update.
-_allocPoint is new allocation points want pool to have.
-_depositFeeBP is new deposit fee in basis points.
-_withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
+ Updates the given pool's apple allocation point and deposit fee. Can only be called by the owner.
+ Inputs: _pid is pool you want to update.
+ _allocPoint is new allocation points want pool to have.
+ _depositFeeBP is new deposit fee in basis points.
+ _withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
 */
  
  function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
@@ -139,6 +144,7 @@ _withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
 /*
  Returns the reward multiplier over the given _from to _to block.
 */
+
  function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
  return _to.sub(_from).mul(BONUS_MULTIPLIER);
  }
@@ -146,6 +152,7 @@ _withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
 /*
  Function that calculates pending apples for _user from rewards from staking _pid.
 */
+
  function pendingApple(uint256 _pid, address _user) external view returns (uint256) {
  PoolInfo storage pool = poolInfo[_pid];
  UserInfo storage user = userInfo[_pid][_user];
@@ -162,6 +169,7 @@ _withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
 /*
  Updates reward variables for all pools. Be careful of gas spending!
 */
+
  function massUpdatePools() public {
  uint256 length = poolInfo.length;
  for (uint256 pid = 0; pid < length; ++pid) {
@@ -169,9 +177,10 @@ _withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
  }
  }
 
- /*
+/*
  Updates reward variables of _pid to be up-to-date.
- */
+*/
+ 
  function updatePool(uint256 _pid) public {
  PoolInfo storage pool = poolInfo[_pid];
  if (block.number <= pool.lastRewardBlock) {
