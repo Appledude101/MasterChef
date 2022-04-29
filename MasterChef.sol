@@ -22,28 +22,25 @@ contract AppleMasterChef is Ownable {
  using SafeMath for uint256;
  using SafeERC20 for IERC20;
 
- // Information for each user, including amount of LP tokens and
+/*
+Info for each user. 
+
+The exludedReward is calculated as follows whenever a user deposits or withdraws LP tokens.
+1. Pool's accApplePerShare and lastRewardBlock are updated.
+2. User recieves pending award sent to their address. Always recieves total amount pending because rewardRate for new total may differ.
+3. User's amount is updated. (Increases if depositing and decreases if withdrawing.)
+4. User's excludedReward is updated. (Namely it excludes all rewards obtained until block after the deposit or withdrawl.)
+*/
+
  struct UserInfo {
- uint256 amount; // How many LP tokens the user has provided.
- uint256 excludedReward; // Reward debt. See explanation below.
- //
- // We do some fancy math here. Basically, at any point in time, the amount of Apples
- // entitled to a user but is pending to be distributed is:
- //
- // pending reward = (user.amount * pool.accApplePerShare) - user.excludedReward
- // 
- // where user.excludedReward is the portion of accApplePerShare that the user is not privvy to
- // because it was accumulated before the user entered the pool.
- // This is explained further in the deposit function section. 
- //
- // Whenever a user deposits or withdraws LP tokens to a pool, here's what happens:
- // 1. The pool's `accApplePerShare` (and `lastRewardBlock`) gets updated.
- // 2. User receives the pending reward sent to his/her address.
- // 3. User's `amount` gets updated.
- // 4. User's `excludedReward` gets updated.
+ uint256 amount; // # LP tokens user has depositied in contract.
+ uint256 excludedReward; // Amount of the total appleRewards that user is not entitled to. (Entered contract after those rewards)
  }
 
- // Info of each pool.
+ 
+ /*
+ Info for each pool
+ */
  struct PoolInfo {
  IERC20 lpToken; // Address of LP token contract.
  uint256 allocPoint; // How many allocation points assigned to this pool. Used to determine percent Apples to send per block
@@ -52,25 +49,22 @@ contract AppleMasterChef is Ownable {
  uint16 depositFeeBP; // Deposit fee in basis points
  }
 
- // The Apple TOKEN!
-AppleToken public apple;
- // Dev address.
- address public devaddr;
- // Apples tokens created per block.
- uint256 public applePerBlock;
- // Bonus muliplier for early apple makers.
- uint256 public constant BONUS_MULTIPLIER = 1;
- // Deposit Fee address
- address public feeAddress;
+AppleToken public apple; // The Apple TOKEN!
 
- // Info of each pool.
- PoolInfo[] public poolInfo;
+ address public devaddr; // Dev address.
+ address public feeAddress; // Deposit Fee address
+
+ uint256 public applePerBlock; // Apples tokens created per block.
+ uint256 public constant BONUS_MULTIPLIER = 1; // Bonus muliplier for early apple makers.
+
+
+ PoolInfo[] public poolInfo; // Info of each pool.
+
  // Info of each user that stakes LP tokens. userInfo[which LP][which user]
  mapping (uint256 => mapping (address => UserInfo)) public userInfo;
- // Total allocation points. Must be the sum of all allocation points in all pools.
- uint256 public totalAllocPoint = 0;
- // The block number when apple mining starts.
- uint256 public startBlock;
+
+ uint256 public totalAllocPoint = 0; // Total allocation points. Must be the sum of all allocation points in all pools.
+ uint256 public startBlock; // The block number when apple mining starts.
 
  event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
  event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -90,16 +84,23 @@ AppleToken public apple;
  startBlock = _startBlock;
  }
 
- // total number of pools in staking contract
+/*
+ Gives the total number of pools in staking contract.
+*/
  function poolLength() external view returns (uint256) {
  return poolInfo.length;
  }
 
 
+/*
+ Adds a new lp to the pool. Can only be called by the owner.
+ XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do. 
 
- // Add a new lp to the pool. Can only be called by the owner.
- // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do. 
-
+ Inputs _allocPoint is value so percentage rewards you want for pool = _allocPoint/totalAllocPoint.
+ _lpToken is lpToken you want new LP pool for.
+ _depositFeeBP is the deposit fee you want to charge each time in basis points.
+ _withUpdate is a bool. Choose 1 if you want to massUpdate all pools and 0 if you dont want to update pools.
+*/
  function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
  require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
  if (_withUpdate) {
@@ -117,8 +118,14 @@ AppleToken public apple;
  }
 
 
-
- // Update the given pool's apple allocation point and deposit fee. Can only be called by the owner.
+/*
+Updates the given pool's apple allocation point and deposit fee. Can only be called by the owner.
+Inputs: _pid is pool you want to update.
+_allocPoint is new allocation points want pool to have.
+_depositFeeBP is new deposit fee in basis points.
+_withUpdate is a bool. Choose 1 if want to massUpdatePools and 0 if not.
+*/
+ 
  function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
  require(_depositFeeBP <= 10000, "set: invalid deposit fee basis points");
  if (_withUpdate) {
@@ -129,12 +136,16 @@ AppleToken public apple;
  poolInfo[_pid].depositFeeBP = _depositFeeBP;
  }
 
- // Return reward multiplier over the given _from to _to block.
+/*
+ Returns the reward multiplier over the given _from to _to block.
+*/
  function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
  return _to.sub(_from).mul(BONUS_MULTIPLIER);
  }
 
- // View function to see pending apples on frontend.
+/*
+ Function that calculates pending apples for _user from rewards from staking _pid.
+*/
  function pendingApple(uint256 _pid, address _user) external view returns (uint256) {
  PoolInfo storage pool = poolInfo[_pid];
  UserInfo storage user = userInfo[_pid][_user];
@@ -148,7 +159,9 @@ AppleToken public apple;
  return user.amount.mul(accApplePerShare).div(1e12).sub(user.excludedReward);
  }
 
- // Update reward variables for all pools. Be careful of gas spending!
+/*
+ Updates reward variables for all pools. Be careful of gas spending!
+*/
  function massUpdatePools() public {
  uint256 length = poolInfo.length;
  for (uint256 pid = 0; pid < length; ++pid) {
@@ -156,7 +169,9 @@ AppleToken public apple;
  }
  }
 
- // Update reward variables of the given pool to be up-to-date.
+ /*
+ Updates reward variables of _pid to be up-to-date.
+ */
  function updatePool(uint256 _pid) public {
  PoolInfo storage pool = poolInfo[_pid];
  if (block.number <= pool.lastRewardBlock) {
@@ -169,19 +184,23 @@ AppleToken public apple;
  }
  uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
  uint256 appleReward = multiplier.mul(applePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
- apple.mint(devaddr, appleReward.div(10));
+ //apple.mint(devaddr, appleReward.div(10)); If you want to pay a devFee, can uncomment this.
  apple.mint(address(this), appleReward);
  pool.accApplePerShare = pool.accApplePerShare.add(appleReward.mul(1e12).div(lpSupply));
  pool.lastRewardBlock = block.number;
  }
 
- // Deposit LP tokens to MasterChef for apple allocation.
- // When a user deposits, first pool is updated and pending
- // rewards are transferred since previous rates should not be applied
- // to newly deposited amount
+/*
+ Deposits LP tokens to MasterChef to earn apples.
+ When a user deposits, first pool is updated and all pendingRewards are transferred. 
+ This is because if there is already some amount deposited, the new total amount will have a different reward rate.
+ So you must pay out the pending rewards which then changes excludedRewards to exclude all rewards until next block.
+*/
+
  function deposit(uint256 _pid, uint256 _amount) public {
  PoolInfo storage pool = poolInfo[_pid];
  UserInfo storage user = userInfo[_pid][msg.sender];
+ require(pool.lpToken.balanceOf(msg.sender) >= _amount, "not enough lp tokens");
  updatePool(_pid);
  if (user.amount > 0) {
  uint256 pending = user.amount.mul(pool.accApplePerShare).div(1e12).sub(user.excludedReward);
@@ -204,7 +223,10 @@ AppleToken public apple;
  emit Deposit(msg.sender, _pid, _amount);
  }
 
- // Withdraw LP tokens from MasterChef.
+/*
+ Withdraws msg.sender's LP tokens from MasterChef and also transfers all pendingRewards to msg.sender.
+*/
+
  function withdraw(uint256 _pid, uint256 _amount) public {
  PoolInfo storage pool = poolInfo[_pid];
  UserInfo storage user = userInfo[_pid][msg.sender];
@@ -222,7 +244,10 @@ AppleToken public apple;
  emit Withdraw(msg.sender, _pid, _amount);
  }
 
- // Withdraw without caring about rewards. EMERGENCY ONLY.
+/*
+ Withdraws msg.senders lp tokens without caring about rewards. EMERGENCY ONLY.
+*/
+
  function emergencyWithdraw(uint256 _pid) public {
  PoolInfo storage pool = poolInfo[_pid];
  UserInfo storage user = userInfo[_pid][msg.sender];
@@ -233,7 +258,10 @@ AppleToken public apple;
  emit EmergencyWithdraw(msg.sender, _pid, amount);
  }
 
- // Safe apple transfer function, just in case if rounding error causes pool to not have enough apples.
+/*
+ Safe apple transfer function, just in case if rounding error causes pool to not have enough apples.
+*/
+
  function safeAppleTransfer(address _to, uint256 _amount) internal {
  uint256 appleBal = apple.balanceOf(address(this));
  if (_amount > appleBal) {
@@ -243,7 +271,10 @@ AppleToken public apple;
  }
  }
 
- // Update dev address by the previous dev.
+/*
+ Updates dev address by the previous dev.
+*/
+
  function dev(address _devaddr) public {
  require(msg.sender == devaddr, "dev: wut?");
  devaddr = _devaddr;
@@ -254,7 +285,10 @@ AppleToken public apple;
  feeAddress = _feeAddress;
  }
 
- //Pancake has to add hidden dummy pools inorder to alter the emission, here we make it simple and transparent to all.
+/*
+ Updates Emmission Rate
+*/
+
  function updateEmissionRate(uint256 _applePerBlock) public onlyOwner {
  massUpdatePools();
  applePerBlock = _applePerBlock;
