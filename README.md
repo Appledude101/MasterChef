@@ -17,9 +17,3 @@ AppleMasterChef: [0x1AA5C230fFaCc818655503d39a14adE6F96d81D0](https://rinkeby.et
 Currently AppleMasterChef only has one LP-Pool, but it is really just a single sided staking for the apple token itself. There was initially 1,000,000 apple minted before AppleMasterChef was made owner of the token. In order to earn more apples you must now stake apples in the LP-Pool with PID=0. Once more LP's are added, then there will be more opportunities to earn apples.  
 
 To test deposit/withdrawl/rewards: (Can see transaction history under this wallet [0x7b94ec20B75A4818B252bcd25A3b52c477FEb0c6](https://rinkeby.etherscan.io/address/0x7b94ec20b75a4818b252bcd25a3b52c477feb0c6)). 
-1. Deposited 100,000 Apple.
-2. Withdrew 100,000 Apple. (Emmisions were set to 0 so no rewards gained).  
-Then emmisions where set to 1 Apple per block and allocation changed from 0 to 1 so that emmisions would be gained.  
-1. Deposited 1,000,000 Apple.  
-2. Withdrew 1,000,000 Apple from the pool and recieved 100,036.3 Apple.  
-33 Apples were given as rewards for staking in the contract and 3.3 Apples were given to me as the developer as in the updatePool function the developer is also minted 1/10th of the reward tokens.
