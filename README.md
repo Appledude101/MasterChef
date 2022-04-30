@@ -20,6 +20,6 @@ To test deposit/withdrawl/rewards: (Can see transaction history under this walle
 1. Deposited 100,000 Apple.
 2. Withdrew 100,000 Apple. (Emmisions were set to 0 so no rewards gained).  
 Then emmisions where set to 1 Apple per block and allocation changed from 0 to 1 so that emmisions would be gained.  
-1. Deposited 100,000 Apple.  
-2. Withdrew 100,000 Apple from the pool and recieved 100,036.3 Apple.  
+1. Deposited 1,000,000 Apple.  
+2. Withdrew 1,000,000 Apple from the pool and recieved 100,036.3 Apple.  
 33 Apples were given as rewards for staking in the contract and 3.3 Apples were given to me as the developer as in the updatePool function the developer is also minted 1/10th of the reward tokens.
